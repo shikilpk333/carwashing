@@ -1,7 +1,7 @@
+import 'package:carwashbooking/Screens/BookingSlotScreen/view/slot_booking_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../Profile/view/profile_screen.dart';
-import '../../BookingSlotScreen.dart'; // your existing booking screen path or adjust
 import '../presenter/home_presenter.dart';
 import '../model/home_model.dart';
 

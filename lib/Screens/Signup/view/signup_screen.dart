@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../presenter/signup_presenter.dart';
 import '../repository/signup_repository.dart';
 import '../model/signup_model.dart';
