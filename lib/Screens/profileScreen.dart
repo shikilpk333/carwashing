@@ -379,6 +379,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileScreen extends StatefulWidget {
   final User user;
@@ -911,7 +912,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _logout() async {
     try {
       await FirebaseAuth.instance.signOut();
-      
+        final prefs = await SharedPreferences.getInstance();
+        prefs.remove("userId");
       // Navigate to LoginScreen and remove all previous screens from stack
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const LoginScreen()),

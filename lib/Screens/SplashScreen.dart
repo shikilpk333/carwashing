@@ -1,5 +1,7 @@
+import 'package:carwashbooking/Screens/Homescreen.dart';
 import 'package:flutter/material.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -8,13 +10,26 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  @override
+   @override
   void initState() {
     super.initState();
-    
-    // Navigate to home screen after 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
-      Navigator.pushReplacementNamed(context, '/Login');//'/home');
+
+    Future.delayed(const Duration(seconds: 3), () async {
+      final prefs = await SharedPreferences.getInstance();
+      final user = FirebaseAuth.instance.currentUser; // 🔑 Get logged in user
+
+      if (user != null && prefs.containsKey("userId")) {
+        print("📌 Found userId: ${prefs.getString("userId")}");
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomeScreen(user: user),
+          ),
+        );
+      } else {
+        print("❌ No user found in SharedPreferences or FirebaseAuth");
+        Navigator.pushReplacementNamed(context, '/Login');
+      }
     });
   }
 

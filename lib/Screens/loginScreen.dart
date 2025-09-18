@@ -2,6 +2,8 @@ import 'package:carwashbooking/Screens/Homescreen.dart';
 import 'package:carwashbooking/Screens/SignupScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -310,6 +312,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // If successful, navigate to HomeScreen
       if (userCredential.user != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("userId", userCredential.user!.uid);
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => HomeScreen(user: userCredential.user!)),
