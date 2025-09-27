@@ -13,9 +13,9 @@ class SplashPresenter {
   Future<void> checkAuthAndNavigate() async {
     final loggedIn = await repository.isLoggedIn();
     if (loggedIn) {
-     // view.navigateToHome();
+      view.navigateToHome();
     } else {
-      //view.navigateToLogin();
+      view.navigateToLogin();
     }
   }
 }
