@@ -2,6 +2,8 @@ import 'package:carwashbooking/Screens/Splash/model/splash_model.dart';
 import 'package:carwashbooking/Screens/Splash/presenter/splash_presenter.dart';
 import 'package:carwashbooking/Screens/Splash/repository/signup_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
+
 import '../../Login/view/login_screen.dart';
 import '../../Home/view/home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -24,7 +26,7 @@ class _SplashScreenState extends State<SplashScreen> implements SplashView {
       repository: SplashRepository(SplashModel()),
     );
 
-    Future.delayed(const Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 10), () {
       presenter.checkAuthAndNavigate();
     });
   }
@@ -32,34 +34,29 @@ class _SplashScreenState extends State<SplashScreen> implements SplashView {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.deepPurple,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.local_car_wash, size: 80, color: Colors.white),
-            SizedBox(height: 20),
-            Text(
-              "AquaClean",
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset('assets/images/splash.jpeg', fit: BoxFit.cover),
+          Center(
+            child:  Column(
+              children: [
+                SizedBox(height: 200),
+                Lottie.asset(
+                  'assets/animation/Simpleloading.json',
+                  width: 200,
+                  height: 200,
+                  fit: BoxFit.contain,
+                ),
+                Center(child: Text('AquaClean', style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.white))),
+              ],
             ),
-            SizedBox(height: 16),
-            Text(
-              "Sparkling clean, effortlessly booked.",
-              style: TextStyle(fontSize: 16, color: Colors.white70),
-            ),
-            SizedBox(height: 40),
-            CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-            ),
-          ],
-        ),
+         
+          ),
+        ],
       ),
     );
+   
   }
 
   @override

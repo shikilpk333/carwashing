@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
       title: 'AquaClean',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.deepPurple),
-      initialRoute: AppRoutes.splash,
+      initialRoute: AppRoutes.Splashsh,
       routes: AppRoutes.routes,
     );
   }
