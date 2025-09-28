@@ -20,15 +20,3 @@ class SplashRepository {
   }
 }
 
-
-/*
-class SplashRepository {
-  final SplashModel model;
-  SplashRepository(this.model);
-
-  Future<bool> isLoggedIn() async {
-    final user = await model.getLoggedInUserIfSaved();
-    return user != null;
-  }
-}
-*/

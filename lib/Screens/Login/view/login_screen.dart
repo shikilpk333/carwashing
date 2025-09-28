@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import '../../Signup/view/signup_screen.dart';
 import '../../Home/view/home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -15,6 +16,8 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> implements LoginView {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final Color backgroundColor = const Color(0xFF0D111C);
+  final Color accentBlue = const Color(0xFF00C8FF);
 
   late LoginPresenter presenter;
   bool _obscure = true;
@@ -68,24 +71,42 @@ class _LoginScreenState extends State<LoginScreen> implements LoginView {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      /*appBar: AppBar(
+        backgroundColor: backgroundColor,
+      ),*/
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 60),
+            SizedBox(height: 50,),
+            Center(
+              child: Container(
+                height: 200,
+                width: 200,
+            
+                child: Center(
+                  child: Lottie.asset(
+            'assets/animation/SecureLogin.json',  // your Lottie file path
+            fit: BoxFit.contain,
+          ),
+                ),
+              ),
+            ),
+
+          //  const SizedBox(height: 10),
             const Text(
               "Welcome back!",
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: Colors.white,
               ),
             ),
             const SizedBox(height: 8),
             const Text(
               "Sign in to continue",
-              style: TextStyle(fontSize: 16, color: Colors.grey),
+              style: TextStyle(fontSize: 16, color: Colors.white),
             ),
             const SizedBox(height: 40),
             _buildTextField(
@@ -107,7 +128,10 @@ class _LoginScreenState extends State<LoginScreen> implements LoginView {
                 Row(
                   children: [
                     Checkbox(value: false, onChanged: (_) {}),
-                    const Text("Remember me"),
+                    const Text(
+                      "Remember me",
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ],
                 ),
                 TextButton(
@@ -173,6 +197,7 @@ class _LoginScreenState extends State<LoginScreen> implements LoginView {
           ],
         ),
       ),
+      backgroundColor: backgroundColor,
     );
   }
 
@@ -190,7 +215,7 @@ class _LoginScreenState extends State<LoginScreen> implements LoginView {
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: Colors.black87,
+            color: Colors.white,
           ),
         ),
         const SizedBox(height: 8),
@@ -228,7 +253,7 @@ class _LoginScreenState extends State<LoginScreen> implements LoginView {
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: Colors.black87,
+            color: Colors.white,
           ),
         ),
         const SizedBox(height: 8),
