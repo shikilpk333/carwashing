@@ -1,3 +1,4 @@
+import 'package:carwashbooking/main.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import '../../Signup/view/signup_screen.dart';
@@ -44,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> implements LoginView {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.red,
+        backgroundColor: aquaSwatch,
         duration: const Duration(seconds: 3),
       ),
     );
@@ -145,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen> implements LoginView {
                   child: const Text(
                     "Forgot Password?",
                     style: TextStyle(
-                      color: Colors.deepPurple,
+                      color: aquaSwatch,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -165,12 +166,13 @@ class _LoginScreenState extends State<LoginScreen> implements LoginView {
                           _passwordController.text,
                         ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
+                  backgroundColor: Color(0xFF00C8FF),
+                  //Colors.deepPurple,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  disabledBackgroundColor: Colors.deepPurple.withOpacity(0.5),
+                  disabledBackgroundColor: aquaSwatch.withOpacity(0.5),
                 ),
                 child: _isLoading
                     ? const SizedBox(
@@ -208,8 +210,8 @@ class _LoginScreenState extends State<LoginScreen> implements LoginView {
                         text: "Sign Up",
                         style: TextStyle(
                           color: _isLoading
-                              ? Colors.deepPurple.withOpacity(0.5)
-                              : Colors.deepPurple,
+                              ? aquaSwatch.withOpacity(0.5)
+                              : aquaSwatch,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -291,7 +293,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Colors.deepPurple),
+              borderSide: const BorderSide(color: aquaSwatch),
             ),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

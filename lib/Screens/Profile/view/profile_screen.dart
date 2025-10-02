@@ -1,5 +1,6 @@
 import 'package:carwashbooking/Core/services/location_service.dart';
 import 'package:carwashbooking/Core/utils/formatters.dart';
+import 'package:carwashbooking/main.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -24,6 +25,9 @@ class _ProfileScreenState extends State<ProfileScreen> implements ProfileView {
   bool _isLoading = true;
   bool _isGettingLocation = false;
 
+  final Color backgroundColor = Color(0x071826);
+  //const Color(0xFF0D1B2A);
+
   final LocationService _locationService = LocationService();
 
   @override
@@ -32,7 +36,7 @@ class _ProfileScreenState extends State<ProfileScreen> implements ProfileView {
     print('🎯 ProfileScreen initialized for user: ${widget.user.uid}');
     print('📧 Auth user email: ${widget.user.email}');
     print('👤 Auth user display name: ${widget.user.displayName}');
-    
+
     presenter = ProfilePresenter(
       repository: ProfileRepository(
         firestore: FirebaseFirestore.instance,
@@ -40,15 +44,18 @@ class _ProfileScreenState extends State<ProfileScreen> implements ProfileView {
       ),
     );
     presenter.attachView(this);
-    
+
     // Ensure document exists first, then load user data
-    presenter.ensureUserDocumentExists(widget.user).then((_) {
-      print('✅ Document ensured, now loading user data');
-      return presenter.loadUser(widget.user.uid);
-    }).catchError((error) {
-      print('❌ Error in initialization: $error');
-      showError('Initialization failed: $error');
-    });
+    presenter
+        .ensureUserDocumentExists(widget.user)
+        .then((_) {
+          print('✅ Document ensured, now loading user data');
+          return presenter.loadUser(widget.user.uid);
+        })
+        .catchError((error) {
+          print('❌ Error in initialization: $error');
+          showError('Initialization failed: $error');
+        });
   }
 
   @override
@@ -76,7 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen> implements ProfileView {
   void showError(String message) {
     print('❌ Error: $message');
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red)
+      SnackBar(content: Text(message), backgroundColor: aquaSwatch),
     );
   }
 
@@ -107,7 +114,7 @@ class _ProfileScreenState extends State<ProfileScreen> implements ProfileView {
         showError('Location services are disabled. Please enable them.');
         return;
       }
-      
+
       var permission = await _locationService.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await _locationService.requestPermission();
@@ -116,7 +123,7 @@ class _ProfileScreenState extends State<ProfileScreen> implements ProfileView {
           return;
         }
       }
-      
+
       if (permission == LocationPermission.deniedForever) {
         showError(
           'Location permissions are permanently denied. Please enable them in app settings.',
@@ -129,7 +136,7 @@ class _ProfileScreenState extends State<ProfileScreen> implements ProfileView {
         pos.latitude,
         pos.longitude,
       );
-      
+
       if (address != null) {
         await presenter.updateAddress(widget.user.uid, address);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -204,18 +211,16 @@ class _ProfileScreenState extends State<ProfileScreen> implements ProfileView {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Profile & Settings',
-          style: TextStyle(color: Colors.black),
-        ),
+        title: const Text('', style: TextStyle(color: Colors.white)),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: backgroundColor,
         elevation: 1,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
+      backgroundColor: backgroundColor,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -223,83 +228,249 @@ class _ProfileScreenState extends State<ProfileScreen> implements ProfileView {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'My Profile',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Left circular icon
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color(0x003B2D05), // dark circle background
+                        ),
+                        child: const Icon(
+                          Icons.person_outline,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+
+                      // Title + Subtitle
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text(
+                            'Profile',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'Manage your account',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.normal,
+                              color: Color(0xFF00C8FF), // aquaSwatch main color
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 20.0),
                   Card(
                     elevation: 1,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(15.0),
                     ),
+                    color: const Color(
+                      0xFF0D1B2A,
+                    ), // dark background like in screenshot
                     child: Padding(
                       padding: const EdgeInsets.all(16),
-                      child: Column(
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.person_outline,
-                                color: Colors.grey,
-                                size: 20,
+                          // Avatar
+                          Container(
+                            height: 100,
+                            width: 100,
+                            decoration: BoxDecoration(
+                              color: aquaSwatch,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(
+                                20,
+                              ), // match container radius
+                              child: Image.network(
+                                'https://akm-img-a-in.tosshub.com/indiatoday/images/story/202408/shah-rukh-khan-115148818-16x9_0.jpg?VersionId=MccYGNrEjoJ3aqFcljPAtCdtRcJWRDjQ&size=690:388',
+                                fit: BoxFit.cover, // makes it fill nicely
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Icon(
+                                    Icons.broken_image,
+                                    size: 40,
+                                    color: Colors.black,
+                                  );
+                                },
                               ),
-                              const SizedBox(width: 12),
-                              Text(
-                                _userData?.fullName ??
-                                    widget.user.displayName ??
-                                    'User Name',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.email_outlined,
-                                color: Colors.grey,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                _userData?.email ??
-                                    widget.user.email ??
-                                    'user@example.com',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          if (_userData?.updatedAt != null)
-                            Row(
+                          const SizedBox(width: 20.0),
+
+                          // User Info
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Icon(
-                                  Icons.calendar_today_outlined,
-                                  color: Colors.grey,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 12),
+                                // Name
                                 Text(
-                                  'Member since ${formatDateFromTimestamp(_userData!.updatedAt)}',
+                                  _userData?.fullName ??
+                                      widget.user.displayName ??
+                                      'User Name',
                                   style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+
+                                Text(
+                                  "Member since ${formatDateFromTimestamp(_userData!.updatedAt)}",
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.normal,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+
+                                Text(
+                                  _userData?.email ??
+                                      widget.user.email ??
+                                      'Email',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.normal,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                // Verified badge
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.teal.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.verified,
+                                        size: 16,
+                                        color: Colors.teal,
+                                      ),
+                                      SizedBox(width: 6),
+                                      Text(
+                                        'Verified',
+                                        style: TextStyle(
+                                          color: Colors.teal,
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
+                          ),
                         ],
                       ),
                     ),
+                  ),
+                  SizedBox(height: 15.0),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Container(
+                            height: 100,
+                            width: 100,
+                            decoration: BoxDecoration(
+                              color: Color(0xFF0D1B2A),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(
+                                20,
+                              ), // match container radius
+                              child: const Center(
+                                child: Column(
+                                  children: [
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                        top: 16.0,
+                                        bottom: 8,
+                                      ),
+                                      child: Icon(
+                                        Icons.calendar_month,
+                                        size: 40,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    Text(
+                                      "Bookings",
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Container(
+                            height: 100,
+                            width: 100,
+                            decoration: BoxDecoration(
+                              color: Color(0xFF0D1B2A),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(
+                                20,
+                              ), // match container radius
+                              child: const Center(
+                                child: Column(
+                                  children: [
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                        top: 16.0,
+                                        bottom: 8,
+                                      ),
+                                      child: Icon(
+                                        Icons.gps_fixed,
+                                        size: 40,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    Text(
+                                      "Locations",
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   const Divider(height: 1, color: Colors.grey),
@@ -315,59 +486,10 @@ class _ProfileScreenState extends State<ProfileScreen> implements ProfileView {
                           color: Colors.black87,
                         ),
                       ),
-                      IconButton(
-                        icon: _isGettingLocation
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(
-                                Icons.edit_location_alt,
-                                color: Colors.deepPurple,
-                              ),
-                        onPressed: _isGettingLocation
-                            ? null
-                            : _showAddressEditDialog,
-                      ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: Text(
-                      _userData?.address ?? '123 Main St, Anytown, CA 90210',
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Divider(height: 1, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'App Settings',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSettingItem(
-                    'Push Notifications',
-                    'Receive alerts for bookings and updates.',
-                    true,
-                    (v) {},
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSettingItem(
-                    'Dark Mode',
-                    'Switch to a darker theme for comfort.',
-                    false,
-                    (v) {},
-                  ),
-                  const SizedBox(height: 16),
+                  //Spacer(),
+               
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
