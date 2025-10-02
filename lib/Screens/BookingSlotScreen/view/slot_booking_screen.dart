@@ -5,7 +5,6 @@ import '../presenter/booking_presenter.dart';
 import '../model/booking_model.dart';
 import '../repository/booking_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:carwashbooking/Screens/BookingConfirmation.dart';
 
 class SlotBookingScreen extends StatefulWidget {
   const SlotBookingScreen({super.key});
@@ -14,33 +13,36 @@ class SlotBookingScreen extends StatefulWidget {
   State<SlotBookingScreen> createState() => _SlotBookingScreenState();
 }
 
-class _SlotBookingScreenState extends State<SlotBookingScreen> implements BookingView {
+class _SlotBookingScreenState extends State<SlotBookingScreen>
+    implements BookingView {
   late BookingPresenter presenter;
-  
+
   final TextEditingController carMakeController = TextEditingController();
   final TextEditingController carModelController = TextEditingController();
   final TextEditingController licensePlateController = TextEditingController();
+  final TextEditingController notesController = TextEditingController();
+  final TextEditingController yearController = TextEditingController();
+  final TextEditingController colorController = TextEditingController();
+
   String selectedCarType = "Sedan";
-  
+
   bool isLoading = false;
   List<BookingSlot> timeSlots = [];
-@override
-void initState() {
-  super.initState();
-  
-  presenter = BookingPresenter(
-    repository: FirebaseBookingRepository(
-      firestore: FirebaseFirestore.instance,
-    ),
-    initialDate: BookingPresenter.getInitialDate(), // Use static method
-  );
-  
-  presenter.attachView(this);
-  presenter.loadTimeSlots();
-}
 
- 
+  @override
+  void initState() {
+    super.initState();
 
+    presenter = BookingPresenter(
+      repository: FirebaseBookingRepository(
+        firestore: FirebaseFirestore.instance,
+      ),
+      initialDate: BookingPresenter.getInitialDate(),
+    );
+
+    presenter.attachView(this);
+    presenter.loadTimeSlots();
+  }
 
   @override
   void dispose() {
@@ -48,6 +50,9 @@ void initState() {
     carMakeController.dispose();
     carModelController.dispose();
     licensePlateController.dispose();
+    notesController.dispose();
+    yearController.dispose();
+    colorController.dispose();
     super.dispose();
   }
 
@@ -58,7 +63,8 @@ void initState() {
   void hideLoading() => setState(() => isLoading = false);
 
   @override
-  void showTimeSlots(List<BookingSlot> slots) => setState(() => timeSlots = slots);
+  void showTimeSlots(List<BookingSlot> slots) =>
+      setState(() => timeSlots = slots);
 
   @override
   void showError(String message) {
@@ -67,24 +73,24 @@ void initState() {
     );
   }
 
-@override
-void onBookingSuccess() {
-  final booking = BookingModel(
-    selectedDate: presenter.selectedDate,
-    selectedTime: presenter.selectedTimeSlot!,
-    carMake: carMakeController.text,
-    carModel: carModelController.text,
-    licensePlate: licensePlateController.text,
-    carType: selectedCarType,
-  );
+  @override
+  void onBookingSuccess() {
+    final booking = BookingModel(
+      selectedDate: presenter.selectedDate,
+      selectedTime: presenter.selectedTimeSlot!,
+      carMake: carMakeController.text,
+      carModel: carModelController.text,
+      licensePlate: licensePlateController.text,
+      carType: selectedCarType,
+    );
 
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (context) => BookingConfirmationScreen(booking: booking),
-    ),
-  );
-}
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BookingConfirmationScreen(booking: booking),
+      ),
+    );
+  }
 
   @override
   void onDateChanged(DateTime newDate) => setState(() {});
@@ -92,251 +98,286 @@ void onBookingSuccess() {
   @override
   void onTimeSlotSelected(String timeSlot) => setState(() {});
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: presenter.selectedDate,
-      firstDate: BookingPresenter.getInitialDate(),
-      lastDate: presenter.getNextAvailableDate(presenter.selectedDate),
-    );
-
-    if (picked != null) {
-      await presenter.selectDate(picked);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF0A0F1C),
       appBar: AppBar(
-        title: const Text(
-          "Select Booking Slot",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-        centerTitle: true,
+        backgroundColor: const Color(0xFF0A0F1C),
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
+        title: const Text(
+          "Choose Slot",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+        centerTitle: true,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildDateSelector(),
-                  const SizedBox(height: 20),
-                  _buildTimeSlots(),
-                  const SizedBox(height: 20),
-                  _buildCarDetailsForm(),
-                  const SizedBox(height: 24),
-                  _buildConfirmButton(),
-                ],
-              ),
-            ),
-    );
-  }
-
-  Widget _buildDateSelector() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              "Select Date",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            IconButton(
-              icon: const Icon(Icons.calendar_today, size: 20),
-              onPressed: () => _selectDate(context),
-            ),
-          ],
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.chevron_left),
-                onPressed: presenter.navigateToPreviousDay,
-              ),
-              Text(
-                presenter.formatDate(presenter.selectedDate),
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.chevron_right),
-                onPressed: presenter.navigateToNextDay,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTimeSlots() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              "Available Time Slots",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            Icon(Icons.info_outline, size: 18, color: Colors.grey.shade600),
-          ],
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 60,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: timeSlots.length,
-            itemBuilder: (context, index) {
-              final slot = timeSlots[index];
-              final isSelected = presenter.selectedTimeSlot == slot.time;
-              final isAvailable = slot.status == "available";
-
-              return GestureDetector(
-                onTap: isAvailable
-                    ? () => presenter.selectTimeSlot(slot.time)
-                    : null,
-                child: Container(
-                  margin: const EdgeInsets.only(right: 12),
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.deepPurple : 
-                           isAvailable ? Colors.white : Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isSelected ? Colors.deepPurple : Colors.grey.shade300,
+          : Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildServiceAndAddress(),
+                        const SizedBox(height: 20),
+                        _buildDateAndSlots(),
+                        const SizedBox(height: 20),
+                        _buildCarDetailsForm(),
+                        const SizedBox(height: 100),
+                      ],
                     ),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        slot.time,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: isSelected ? Colors.white : 
-                                 isAvailable ? Colors.black : Colors.grey.shade600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        isSelected ? "Selected" : 
-                        isAvailable ? "Available" : "Not Available",
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isSelected ? Colors.white : 
-                                 isAvailable ? Colors.black : Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
-              );
-            },
-          ),
-        ),
+                _buildBottomButtons(),
+              ],
+            ),
+    );
+  }
+
+  /// --- Top cards ---
+  Widget _buildServiceAndAddress() {
+    return Column(
+      children: [
+        const SizedBox(height: 12),
+        _buildInfoCard("Home", "Enter address", "Edit"),
       ],
     );
   }
 
-  Widget _buildCarDetailsForm() {
+  Widget _buildInfoCard(String title, String subtitle, String actionText) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
+        color: const Color(0xFF121B2C),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              const Text(
-                "Car Details",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-              const Spacer(),
-              Icon(Icons.refresh, size: 18, color: Colors.grey.shade600),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _buildTextField("Car Make", "e.g., Toyota", carMakeController),
-          const SizedBox(height: 12),
-          _buildTextField("Car Model", "e.g., Camry", carModelController),
-          const SizedBox(height: 12),
-          _buildTextField("License Plate", "e.g., ABC 123", licensePlateController),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            value: selectedCarType,
-            items: presenter.carTypes
-                .map((type) => DropdownMenuItem(value: type, child: Text(type)))
-                .toList(),
-            onChanged: (value) => setState(() => selectedCarType = value!),
-            decoration: InputDecoration(
-              labelText: "Car Type",
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text(subtitle,
+                    style: TextStyle(color: Colors.grey.shade400, fontSize: 13)),
+              ],
             ),
           ),
+          Text(actionText,
+              style: const TextStyle(
+                  color: Colors.blueAccent, fontWeight: FontWeight.w600)),
         ],
       ),
     );
   }
 
-  Widget _buildConfirmButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.deepPurple,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+  /// --- Date and Slots ---
+  Widget _buildDateAndSlots() {
+    final today = BookingPresenter.getInitialDate();
+    final tomorrow = today.add(const Duration(days: 1));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text("Select date",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 12),
+
+        // Today / Tomorrow toggle
+        Row(
+          children: [
+            ChoiceChip(
+              label: const Text("Today"),
+              selected: presenter.selectedDate.day == today.day &&
+                  presenter.selectedDate.month == today.month,
+              onSelected: (_) => presenter.selectDate(today),
+              labelStyle: TextStyle(
+                color: presenter.selectedDate.day == today.day
+                    ? Colors.white
+                    : Colors.white70,
+              ),
+              selectedColor: Colors.blueAccent,
+              backgroundColor: const Color(0xFF1A2235),
+            ),
+            const SizedBox(width: 12),
+            ChoiceChip(
+              label: const Text("Tomorrow"),
+              selected: presenter.selectedDate.day == tomorrow.day &&
+                  presenter.selectedDate.month == tomorrow.month,
+              onSelected: (_) => presenter.selectDate(tomorrow),
+              labelStyle: TextStyle(
+                color: presenter.selectedDate.day == tomorrow.day
+                    ? Colors.white
+                    : Colors.white70,
+              ),
+              selectedColor: Colors.blueAccent,
+              backgroundColor: const Color(0xFF1A2235),
+            ),
+          ],
         ),
-        onPressed: () {
-          final carDetails = CarDetails(
-            make: carMakeController.text,
-            model: carModelController.text,
-            licensePlate: licensePlateController.text,
-            type: selectedCarType,
-          );
-          presenter.confirmBooking(carDetails);
-        },
-        child: const Text(
-          "Confirm Booking",
-          style: TextStyle(fontSize: 16, color: Colors.white),
+
+        const SizedBox(height: 20),
+
+        const Text("Available Time Slots",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 12),
+
+        // Grid-aligned slots
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: timeSlots.map((slot) {
+            final isSelected = presenter.selectedTimeSlot == slot.time;
+            final isAvailable = slot.status == "available";
+
+            return GestureDetector(
+              onTap:
+                  isAvailable ? () => presenter.selectTimeSlot(slot.time) : null,
+              child: Container(
+                width: 80,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Colors.blueAccent
+                      : isAvailable
+                          ? const Color(0xFF1A2235)
+                          : Colors.grey.shade800,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    slot.time,
+                    style: TextStyle(
+                      color: isSelected
+                          ? Colors.white
+                          : isAvailable
+                              ? Colors.white
+                              : Colors.grey,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
         ),
+      ],
+    );
+  }
+
+  /// --- Car Details Form ---
+  Widget _buildCarDetailsForm() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF121B2C),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("Car details",
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 16),
+          _buildDarkTextField("Car make", "e.g., Toyota", carMakeController),
+          const SizedBox(height: 12),
+          _buildDarkTextField("Model", "e.g., Corolla", carModelController),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                  child: _buildDarkTextField("Year", "e.g., 2020", yearController)),
+              const SizedBox(width: 12),
+              Expanded(
+                  child: _buildDarkTextField("Color", "e.g., Silver", colorController)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildDarkTextField(
+              "License plate", "ABC-1234", licensePlateController),
+          const SizedBox(height: 12),
+          _buildDarkTextField("Notes for washer (optional)",
+              "Gate code, parking info, pet in car, etc.", notesController),
+        ],
       ),
     );
   }
 
-  Widget _buildTextField(String label, String hint, TextEditingController controller) {
+  Widget _buildDarkTextField(
+      String label, String hint, TextEditingController controller) {
     return TextField(
       controller: controller,
+      style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: const TextStyle(color: Colors.white70),
         hintText: hint,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        hintStyle: TextStyle(color: Colors.grey.shade500),
+        filled: true,
+        fillColor: const Color(0xFF1A2235),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none),
+      ),
+    );
+  }
+
+  /// --- Bottom Buttons ---
+  Widget _buildBottomButtons() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: const BoxDecoration(
+        color: Color(0xFF0A0F1C),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.blueAccent),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Back",
+                  style: TextStyle(color: Colors.white, fontSize: 16)),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () {
+                final carDetails = CarDetails(
+                  make: carMakeController.text,
+                  model: carModelController.text,
+                  licensePlate: licensePlateController.text,
+                  type: selectedCarType,
+                );
+                presenter.confirmBooking(carDetails);
+              },
+              child: const Text("Confirm Slot",
+                  style: TextStyle(color: Colors.white, fontSize: 16)),
+            ),
+          ),
+        ],
       ),
     );
   }
