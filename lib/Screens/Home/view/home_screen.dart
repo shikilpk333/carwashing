@@ -5,8 +5,6 @@ import '../../Profile/view/profile_screen.dart';
 import '../presenter/home_presenter.dart';
 import '../model/home_model.dart';
 
-import 'dart:ui';
-
 class HomeScreen extends StatefulWidget {
   final User user;
   const HomeScreen({super.key, required this.user});
@@ -50,7 +48,6 @@ class _HomeScreenState extends State<HomeScreen> implements HomeView {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
       appBar: AppBar(
         elevation: 0.8,
         centerTitle : true,
@@ -108,12 +105,11 @@ class _HomeScreenState extends State<HomeScreen> implements HomeView {
             // Background image
             Expanded(
               child: Container(
+                height: double.infinity,
                 // height: 280,
                 decoration: const BoxDecoration(
                   image: DecorationImage(
-                    image: NetworkImage(
-                      "https://images.unsplash.com/photo-1502877338535-766e1452684a",
-                    ),
+                    image: AssetImage("assets/images/back.jpg"),
                     fit: BoxFit.cover,
                   ),
                 ),
