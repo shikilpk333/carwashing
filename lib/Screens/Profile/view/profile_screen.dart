@@ -211,7 +211,7 @@ class _ProfileScreenState extends State<ProfileScreen> implements ProfileView {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      /*  appBar: AppBar(
         title: const Text('', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         backgroundColor: backgroundColor,
@@ -220,7 +220,7 @@ class _ProfileScreenState extends State<ProfileScreen> implements ProfileView {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-      ),
+      ),*/
       backgroundColor: backgroundColor,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -229,7 +229,7 @@ class _ProfileScreenState extends State<ProfileScreen> implements ProfileView {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  /*Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       // Left circular icon
@@ -248,7 +248,7 @@ class _ProfileScreenState extends State<ProfileScreen> implements ProfileView {
                       const SizedBox(width: 12),
 
                       // Title + Subtitle
-                      Column(
+                    /*  Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: const [
                           Text(
@@ -269,9 +269,9 @@ class _ProfileScreenState extends State<ProfileScreen> implements ProfileView {
                             ),
                           ),
                         ],
-                      ),
+                      ),*/
                     ],
-                  ),
+                  ),*/
                   SizedBox(height: 20.0),
                   Card(
                     elevation: 1,
@@ -447,13 +447,14 @@ class _ProfileScreenState extends State<ProfileScreen> implements ProfileView {
                                 20,
                               ), // match container radius
                               child: GestureDetector(
-                                onTap: (){
-                                     Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => AddressListScreen(user: widget.user),
-      ),
-    );
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          AddressListScreen(user: widget.user),
+                                    ),
+                                  );
                                 },
                                 child: const Center(
                                   child: Column(
@@ -485,8 +486,9 @@ class _ProfileScreenState extends State<ProfileScreen> implements ProfileView {
                   ),
                   const SizedBox(height: 16),
                   const Divider(height: 1, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  Row(
+                  const SizedBox(height: 50),
+
+                  /* Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
@@ -498,9 +500,8 @@ class _ProfileScreenState extends State<ProfileScreen> implements ProfileView {
                         ),
                       ),
                     ],
-                  ),
+                  ),*/
                   //Spacer(),
-               
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -568,10 +569,6 @@ class _ProfileScreenState extends State<ProfileScreen> implements ProfileView {
   }
 }
 
-
-
-
-
 class AddressListScreen extends StatelessWidget {
   final User user;
 
@@ -583,8 +580,11 @@ class AddressListScreen extends StatelessWidget {
         .doc(user.uid)
         .collection("addresses")
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => AddressModel.fromMap(doc.data())).toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => AddressModel.fromMap(doc.data()))
+              .toList(),
+        );
   }
 
   Future<void> _addAddress(BuildContext context) async {
@@ -703,8 +703,10 @@ class AddressListScreen extends StatelessWidget {
               return Card(
                 margin: const EdgeInsets.all(10),
                 child: ListTile(
-                  leading:
-                      const Icon(Icons.location_on, color: Colors.deepPurple),
+                  leading: const Icon(
+                    Icons.location_on,
+                    color: Colors.deepPurple,
+                  ),
                   title: Text(addr.address),
                   subtitle: Text(
                     "${addr.city}, ${addr.state}, ${addr.postalCode}\nPhone: ${addr.phone}",
