@@ -1,5 +1,7 @@
+import 'package:carwashbooking/Screens/AddressScreen/Model/addressmodel.dart';
 import 'package:carwashbooking/Screens/BookingConfirmation/model/booking_model.dart';
 import 'package:carwashbooking/Screens/BookingConfirmation/view/booking_confirmation_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../presenter/booking_presenter.dart';
 import '../model/booking_model.dart';
@@ -16,6 +18,10 @@ class SlotBookingScreen extends StatefulWidget {
 class _SlotBookingScreenState extends State<SlotBookingScreen>
     implements BookingView {
   late BookingPresenter presenter;
+
+  String? selectedAddressId;
+List<AddressModel> userAddresses = [];
+
 
   final TextEditingController carMakeController = TextEditingController();
   final TextEditingController carModelController = TextEditingController();
@@ -42,7 +48,32 @@ class _SlotBookingScreenState extends State<SlotBookingScreen>
 
     presenter.attachView(this);
     presenter.loadTimeSlots();
+
+      _loadUserAddresses();
   }
+
+Future<void> _loadUserAddresses() async {
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  
+  //final uid = FirebaseFirestore.instance.auth().currentUser?.uid;
+  if (uid == null) return;
+
+  final snapshot = await FirebaseFirestore.instance
+      .collection("users")
+      .doc(uid)
+      .collection("addresses")
+      .get();
+
+  setState(() {
+    userAddresses = snapshot.docs
+        .map((doc) => AddressModel.fromMap(doc.data()))
+        .toList();
+
+    if (userAddresses.isNotEmpty) {
+      selectedAddressId = userAddresses.first.id;
+    }
+  });
+}
 
   @override
   void dispose() {
@@ -142,14 +173,65 @@ class _SlotBookingScreenState extends State<SlotBookingScreen>
   }
 
   /// --- Top cards ---
-  Widget _buildServiceAndAddress() {
+  
+  /// --- Top cards ---
+/// Now shows dropdown to choose an address
+Widget _buildServiceAndAddress() {
+  return Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: const Color(0xFF121B2C),
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text("Choose Address",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 12),
+        userAddresses.isEmpty
+            ? const Text("No saved addresses. Please add one in profile.",
+                style: TextStyle(color: Colors.white70))
+            : DropdownButtonFormField<String>(
+                value: selectedAddressId,
+                dropdownColor: const Color(0xFF1A2235),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: const Color(0xFF1A2235),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none),
+                ),
+                items: userAddresses.map((address) {
+                  return DropdownMenuItem(
+                    value: address.id,
+                    child: Text(
+                      "${address.address}, ${address.city} - ${address.postalCode}",
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedAddressId = value;
+                  });
+                },
+              ),
+      ],
+    ),
+  );
+}
+
+  
+  
+  /*Widget _buildServiceAndAddress() {
     return Column(
       children: [
         const SizedBox(height: 12),
         _buildInfoCard("Home", "Enter address", "Edit"),
       ],
     );
-  }
+  }*/
 
   Widget _buildInfoCard(String title, String subtitle, String actionText) {
     return Container(
