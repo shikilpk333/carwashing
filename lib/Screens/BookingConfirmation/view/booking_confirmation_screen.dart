@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import '../model/booking_model.dart';
 import '../presenter/booking_presenter.dart';
 import '../repository/booking_repository.dart';
 import 'booking_view.dart';
-
 
 class BookingConfirmationScreen extends StatefulWidget {
   final BookingModel booking;
@@ -15,22 +15,17 @@ class BookingConfirmationScreen extends StatefulWidget {
       _BookingConfirmationScreenState();
 }
 
-/*
-
-class BookingConfirmationScreen extends StatefulWidget {
-  final BookingModel booking;
-
-  const BookingConfirmationScreen({super.key, required this.booking});
-
-  @override
-  State<BookingConfirmationScreen> createState() =>
-      _BookingConfirmationScreenState();
-}*/
-
 class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
+    with TickerProviderStateMixin
     implements BookingView {
   late BookingPresenter presenter;
   bool _isLoading = false;
+  bool _showButtons = false; 
+
+  late final AnimationController _animationController;
+
+  final Color darkBg = const Color(0xFF0D111C);
+  final Color aqua = const Color(0xFF00C8FF);
 
   @override
   void initState() {
@@ -39,6 +34,22 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
       view: this,
       repository: BookingRepositoryImpl(),
     );
+
+    // Initialize animation controller
+    _animationController = AnimationController(vsync: this);
+    _animationController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        setState(() {
+          _showButtons = true; // ✅ Show buttons after animation
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   @override
@@ -46,141 +57,242 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
     final booking = widget.booking;
 
     return Scaffold(
+      backgroundColor: darkBg,
       appBar: AppBar(
-        title: const Text(
-          "Booking Confirmation",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0.5,
+        backgroundColor: darkBg,
+        elevation: 0,
         centerTitle: true,
+        title: const Text(
+          "Booking Confirmed",
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(10),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Center(
+                // ✅ Lottie Animation
+                Lottie.asset(
+                  'assets/animation/Congratulations.json',
+                  controller: _animationController,
+                  repeat: false,
+                  width: 300,
+                  height: 200,
+                  fit: BoxFit.fill,
+                  onLoaded: (composition) {
+                    _animationController
+                      ..duration = composition.duration
+                      ..forward();
+                  },
+                ),
+               // const SizedBox(height: 16),
+                const Text(
+                  "Your wash is scheduled!",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  "We've reserved your selected date and time.\nReview the details below or make changes if needed.",
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+
+                // ✅ Card with Edit options
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF152033),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   child: Column(
                     children: [
-                      Icon(Icons.check_circle, color: Colors.green, size: 64),
-                      SizedBox(height: 16),
-                      Text("Booking Confirmed!",
-                          style: TextStyle(
-                              fontSize: 24, fontWeight: FontWeight.bold)),
-                      SizedBox(height: 8),
-                      Text(
-                        "Your car wash booking has been successfully placed. We look forward to serving you!",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      _buildEditableItem(
+                        icon: Icons.access_time,
+                        title: "Date & Time",
+                        subtitle:
+                            "${_formatDate(booking.selectedDate)} • ${booking.selectedTime}",
+                        actionText: "Change",
+                      ),
+                      const Divider(color: Colors.black26),
+                      _buildEditableItem(
+                        icon: Icons.home_outlined,
+                        title: "Service Address",
+                        subtitle: "Home Address • Add exact location",
+                        actionText: "Update",
                       ),
                     ],
                   ),
                 ),
-                const Divider(thickness: 1),
-                const SizedBox(height: 12),
-
-                // Date & Time
-                _buildDetailItem(
-                  icon: Icons.calendar_today,
-                  title: "Date",
-                  value: _formatDate(booking.selectedDate),
-                ),
-                const SizedBox(height: 8),
-                _buildDetailItem(
-                  icon: Icons.access_time,
-                  title: "Time",
-                  value: booking.selectedTime,
-                ),
-                const Divider(thickness: 1),
-
-                // Car details
-                _buildDetailItem(
-                    icon: Icons.directions_car,
-                    title: "Make",
-                    value: booking.carMake),
-                _buildDetailItem(
-                    icon: Icons.model_training,
-                    title: "Model",
-                    value: booking.carModel),
-                _buildDetailItem(
-                    icon: Icons.color_lens,
-                    title: "Type/Color",
-                    value: booking.carType),
-                _buildDetailItem(
-                    icon: Icons.confirmation_number,
-                    title: "License Plate",
-                    value: booking.licensePlate),
-
-               /* if (booking.isMonthlyBooking)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 16),
-                    child: Text(
-                      "Monthly Booking",
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.deepPurple),
-                    ),
-                  ),*/
-
                 const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () =>
-                        presenter.onCancelBooking(widget.booking),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      side: const BorderSide(color: Colors.red),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text("Cancel Booking"),
+
+                // ✅ Summary Card
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF152033),
+                    borderRadius: BorderRadius.circular(12),
                   ),
+                  child: Column(
+                    children: [
+                      _buildSummaryRow("Service", "Premium"),
+                      _buildSummaryRow("Date", "Today"),
+                      _buildSummaryRow("Time", booking.selectedTime),
+                      _buildSummaryRow("Payment", "Pay on completion"),
+                      const Divider(color: Colors.black26),
+                      _buildSummaryRow(
+                        "Total",
+                        "\$22.00",
+                        bold: true,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // ✅ Buttons visible only after animation
+                AnimatedOpacity(
+                  opacity: _showButtons ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 500),
+                  child: _showButtons
+                      ? Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () =>
+                                    presenter.onCancelBooking(widget.booking),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: const Text(
+                                  "Cancel Booking",
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 16),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () => Navigator.pop(context),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: aqua,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: const Text(
+                                  "Done",
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 16),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : const SizedBox.shrink(),
                 ),
               ],
             ),
           ),
           if (_isLoading)
-            const Center(child: CircularProgressIndicator()),
+            const Center(child: CircularProgressIndicator(color: Colors.white)),
         ],
       ),
     );
   }
 
-  Widget _buildDetailItem({
+  // ✅ Editable row
+  Widget _buildEditableItem({
     required IconData icon,
     required String title,
-    required String value,
+    required String subtitle,
+    required String actionText,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 22, color: Colors.white),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: const TextStyle(fontSize: 13, color: Colors.grey),
+                ),
+              ],
+            ),
+          ],
+        ),
+        Text(
+          actionText,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.lightBlue,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ✅ Summary row
+  Widget _buildSummaryRow(
+    String label,
+    String value, {
+    bool bold = false,
+    Color? color,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(icon, size: 20, color: Colors.grey),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: const TextStyle(fontSize: 14, color: Colors.grey)),
-                const SizedBox(height: 4),
-                Text(value,
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w500)),
-              ],
+          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+              color: color ?? Colors.grey,
             ),
-          )
+          ),
         ],
       ),
     );
@@ -188,29 +300,31 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
 
   static String _formatDate(DateTime date) {
     const months = [
-      "January",
-      "February",
-      "March",
-      "April",
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
       "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December"
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
     return "${months[date.month - 1]} ${date.day}, ${date.year}";
   }
 
-  // BookingView implementation
+  // BookingView Implementation
   @override
   void hideLoading() => setState(() => _isLoading = false);
 
   @override
   void showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -218,8 +332,9 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
 
   @override
   void onBookingCancelled() {
-    Navigator.pop(context); // Go back after cancel
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text("Booking Cancelled")));
+    Navigator.pop(context);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Booking Cancelled")));
   }
 }
