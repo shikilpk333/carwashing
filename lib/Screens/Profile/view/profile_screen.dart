@@ -1,5 +1,6 @@
 import 'package:carwashbooking/Core/services/location_service.dart';
 import 'package:carwashbooking/Core/utils/formatters.dart';
+import 'package:carwashbooking/Screens/AddressScreen/Model/addressmodel.dart';
 import 'package:carwashbooking/main.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -445,25 +446,35 @@ class _ProfileScreenState extends State<ProfileScreen> implements ProfileView {
                               borderRadius: BorderRadius.circular(
                                 20,
                               ), // match container radius
-                              child: const Center(
-                                child: Column(
-                                  children: [
-                                    Padding(
-                                      padding: EdgeInsets.only(
-                                        top: 16.0,
-                                        bottom: 8,
+                              child: GestureDetector(
+                                onTap: (){
+                                     Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddressListScreen(user: widget.user),
+      ),
+    );
+                                },
+                                child: const Center(
+                                  child: Column(
+                                    children: [
+                                      Padding(
+                                        padding: EdgeInsets.only(
+                                          top: 16.0,
+                                          bottom: 8,
+                                        ),
+                                        child: Icon(
+                                          Icons.gps_fixed,
+                                          size: 40,
+                                          color: Colors.white,
+                                        ),
                                       ),
-                                      child: Icon(
-                                        Icons.gps_fixed,
-                                        size: 40,
-                                        color: Colors.white,
+                                      Text(
+                                        "Locations",
+                                        style: TextStyle(color: Colors.white),
                                       ),
-                                    ),
-                                    Text(
-                                      "Locations",
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
@@ -556,3 +567,323 @@ class _ProfileScreenState extends State<ProfileScreen> implements ProfileView {
     );
   }
 }
+
+
+
+
+
+class AddressListScreen extends StatelessWidget {
+  final User user;
+
+  const AddressListScreen({super.key, required this.user});
+
+  Stream<List<AddressModel>> _streamAddresses() {
+    return FirebaseFirestore.instance
+        .collection("users")
+        .doc(user.uid)
+        .collection("addresses")
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => AddressModel.fromMap(doc.data())).toList());
+  }
+
+  Future<void> _addAddress(BuildContext context) async {
+    final addressController = TextEditingController();
+    final cityController = TextEditingController();
+    final stateController = TextEditingController();
+    final postalController = TextEditingController();
+    final phoneController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Add New Address"),
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              TextField(
+                controller: addressController,
+                decoration: const InputDecoration(labelText: "Address"),
+              ),
+              TextField(
+                controller: cityController,
+                decoration: const InputDecoration(labelText: "City"),
+              ),
+              TextField(
+                controller: stateController,
+                decoration: const InputDecoration(labelText: "State"),
+              ),
+              TextField(
+                controller: postalController,
+                decoration: const InputDecoration(labelText: "Postal Code"),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: phoneController,
+                decoration: const InputDecoration(labelText: "Phone"),
+                keyboardType: TextInputType.phone,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (addressController.text.isEmpty ||
+                  cityController.text.isEmpty ||
+                  stateController.text.isEmpty ||
+                  postalController.text.isEmpty ||
+                  phoneController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("All fields are required")),
+                );
+                return;
+              }
+
+              final newAddress = AddressModel(
+                id: DateTime.now().millisecondsSinceEpoch.toString(),
+                address: addressController.text,
+                city: cityController.text,
+                state: stateController.text,
+                postalCode: postalController.text,
+                phone: phoneController.text,
+              );
+
+              await FirebaseFirestore.instance
+                  .collection("users")
+                  .doc(user.uid)
+                  .collection("addresses")
+                  .doc(newAddress.id)
+                  .set(newAddress.toMap());
+
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Address added successfully!")),
+              );
+            },
+            child: const Text("Save"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("My Addresses"),
+        backgroundColor: Colors.deepPurple,
+      ),
+      body: StreamBuilder<List<AddressModel>>(
+        stream: _streamAddresses(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          }
+
+          final addresses = snapshot.data ?? [];
+
+          if (addresses.isEmpty) {
+            return const Center(child: Text("No addresses found."));
+          }
+
+          return ListView.builder(
+            itemCount: addresses.length,
+            itemBuilder: (context, index) {
+              final addr = addresses[index];
+              return Card(
+                margin: const EdgeInsets.all(10),
+                child: ListTile(
+                  leading:
+                      const Icon(Icons.location_on, color: Colors.deepPurple),
+                  title: Text(addr.address),
+                  subtitle: Text(
+                    "${addr.city}, ${addr.state}, ${addr.postalCode}\nPhone: ${addr.phone}",
+                  ),
+                  isThreeLine: true,
+                ),
+              );
+            },
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _addAddress(context),
+        backgroundColor: Colors.deepPurple,
+        icon: const Icon(Icons.add),
+        label: const Text("Add Address"),
+      ),
+    );
+  }
+}
+
+
+
+
+
+
+/*
+class AddressListScreen extends StatelessWidget {
+  final User user;
+
+  const AddressListScreen({super.key, required this.user});
+
+  Future<List<AddressModel>> _fetchAddresses() async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection("users")
+        .doc(user.uid)
+        .collection("addresses")
+        .get();
+
+    return snapshot.docs
+        .map((doc) => AddressModel.fromMap(doc.data()))
+        .toList();
+  }
+
+  Future<void> _addAddress(BuildContext context) async {
+    final addressController = TextEditingController();
+    final cityController = TextEditingController();
+    final stateController = TextEditingController();
+    final postalController = TextEditingController();
+    final phoneController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Add New Address"),
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              TextField(
+                controller: addressController,
+                decoration: const InputDecoration(labelText: "Address"),
+              ),
+              TextField(
+                controller: cityController,
+                decoration: const InputDecoration(labelText: "City"),
+              ),
+              TextField(
+                controller: stateController,
+                decoration: const InputDecoration(labelText: "State"),
+              ),
+              TextField(
+                controller: postalController,
+                decoration: const InputDecoration(labelText: "Postal Code"),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: phoneController,
+                decoration: const InputDecoration(labelText: "Phone"),
+                keyboardType: TextInputType.phone,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (addressController.text.isEmpty ||
+                  cityController.text.isEmpty ||
+                  stateController.text.isEmpty ||
+                  postalController.text.isEmpty ||
+                  phoneController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("All fields are required")),
+                );
+                return;
+              }
+
+              final newAddress = AddressModel(
+                id: DateTime.now().millisecondsSinceEpoch.toString(),
+                address: addressController.text,
+                city: cityController.text,
+                state: stateController.text,
+                postalCode: postalController.text,
+                phone: phoneController.text,
+              );
+
+              await FirebaseFirestore.instance
+                  .collection("users")
+                  .doc(user.uid)
+                  .collection("addresses")
+                  .doc(newAddress.id)
+                  .set(newAddress.toMap());
+
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Address added successfully!")),
+              );
+            },
+            child: const Text("Save"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("My Addresses"),
+        backgroundColor: Colors.deepPurple,
+      ),
+      body: FutureBuilder<List<AddressModel>>(
+        future: _fetchAddresses(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          }
+
+          final addresses = snapshot.data ?? [];
+
+          if (addresses.isEmpty) {
+            return const Center(child: Text("No addresses found."));
+          }
+
+          return ListView.builder(
+            itemCount: addresses.length,
+            itemBuilder: (context, index) {
+              final addr = addresses[index];
+              return Card(
+                margin: const EdgeInsets.all(10),
+                child: ListTile(
+                  leading: const Icon(Icons.location_on, color: Colors.deepPurple),
+                  title: Text(addr.address),
+                  subtitle: Text(
+                    "${addr.city}, ${addr.state}, ${addr.postalCode}\nPhone: ${addr.phone}",
+                  ),
+                  isThreeLine: true,
+                ),
+              );
+            },
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _addAddress(context),
+        backgroundColor: Colors.deepPurple,
+        icon: const Icon(Icons.add),
+        label: const Text("Add Address"),
+      ),
+    );
+  }
+}
+*/

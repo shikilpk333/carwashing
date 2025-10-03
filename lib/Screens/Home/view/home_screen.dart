@@ -1,3 +1,4 @@
+import 'package:carwashbooking/Screens/AddressScreen/Model/addressmodel.dart';
 import 'package:carwashbooking/Screens/BookingSlotScreen/view/slot_booking_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -44,6 +45,54 @@ class _HomeScreenState extends State<HomeScreen> implements HomeView {
       presenter.onTabSelected(0, user);
     });
   }
+
+  @override
+void showAddressForm() {
+  final addressController = TextEditingController();
+  final phoneController = TextEditingController();
+  final cityController = TextEditingController();
+  final stateController = TextEditingController();
+  final postalController = TextEditingController();
+
+  showDialog(
+    context: context,
+    builder: (ctx) {
+      return AlertDialog(
+        title: const Text("Enter Address"),
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              TextField(controller: addressController, decoration: const InputDecoration(labelText: "Address")),
+              TextField(controller: phoneController, decoration: const InputDecoration(labelText: "Phone")),
+              TextField(controller: cityController, decoration: const InputDecoration(labelText: "City")),
+              TextField(controller: stateController, decoration: const InputDecoration(labelText: "State")),
+              TextField(controller: postalController, decoration: const InputDecoration(labelText: "Postal Code")),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+          ElevatedButton(
+            onPressed: () {
+              final newAddress = AddressModel(
+                id: DateTime.now().millisecondsSinceEpoch.toString(),
+                address: addressController.text,
+                phone: phoneController.text,
+                city: cityController.text,
+                state: stateController.text,
+                postalCode: postalController.text,
+              );
+              presenter.saveAddress(model.user, newAddress);
+              Navigator.pop(ctx);
+            },
+            child: const Text("Save"),
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -156,7 +205,7 @@ class _HomeScreenState extends State<HomeScreen> implements HomeView {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: presenter.onBookNow,
+                       onPressed: () => presenter.onBookNow(model.user),
                       icon: const Icon(
                         Icons.local_car_wash,
                         color: Colors.white,
@@ -188,165 +237,3 @@ class _HomeScreenState extends State<HomeScreen> implements HomeView {
   }
 }
 
-
-/*
-class HomeScreen extends StatefulWidget {
-  final User user;
-  const HomeScreen({super.key, required this.user});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> implements HomeView {
-  late HomePresenter presenter;
-  late HomeModel model;
-
-  @override
-  void initState() {
-    super.initState();
-    print("user in home screen: ${widget.user.uid}");
-    model = HomeModel(widget.user);
-    presenter = HomePresenter(view: this);
-  }
-
-  @override
-  void updateSelectedIndex(int index) => setState(() {});
-
-  @override
-  void navigateToBooking() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const SlotBookingScreen()),
-    );
-  }
-
-  @override
-  void navigateToProfile(User user) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => ProfileScreen(user: user)),
-    ).then((_) {
-      presenter.onTabSelected(0, user); // reset to home after returning
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF121B2C),
-      //const Color(0xFF0A0F1C),
-      appBar: AppBar(
-        backgroundColor:  const Color(0xFF0A0F1C),
-        title: const Text(
-          "Car Wash Booking",
-          style: TextStyle(color: Colors.white),
-        ),
-        centerTitle: true,
-        
-        elevation: 1,
-      ),
-      body: Center(child: _homeCard()),
-      bottomNavigationBar: BottomNavigationBar(
-  backgroundColor: const Color(0xFF0A0F1C), // dark bg
-  elevation: 0,
-  type: BottomNavigationBarType.fixed,
-  items: const [
-    BottomNavigationBarItem(
-      icon: Icon(Icons.home_outlined),
-      label: "Home",
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.calendar_month_outlined),
-      label: "My bookings",
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.person_outline),
-      label: "Profile",
-    ),
-  ],
-  currentIndex: presenter.selectedIndex,
-  selectedItemColor: Colors.white,       // active tab white
-  unselectedItemColor: Colors.grey[500], // inactive tabs grey
-  onTap: (i) => presenter.onTabSelected(i, model.user),
-),
-
-      
-      
-      
-      /* BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: "Home",
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: "History"),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: "Profile",
-          ),
-        ],
-        currentIndex: presenter.selectedIndex,
-        selectedItemColor: Colors.deepPurple,
-        onTap: (i) => presenter.onTabSelected(i, model.user),
-      ),*/
-    );
-  }
-
-  Widget _homeCard() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          image: const DecorationImage(
-            image: NetworkImage(
-              "https://images.unsplash.com/photo-1502877338535-766e1452684a",
-            ),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(
-              colors: [Colors.black.withOpacity(0.6), Colors.transparent],
-              begin: Alignment.bottomCenter,
-              end: Alignment.topCenter,
-            ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Your Car, Sparkling Clean!",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                "Schedule your next premium car wash with ease. Select your preferred date, time, and service package.",
-                style: TextStyle(color: Colors.white70, fontSize: 14),
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton.icon(
-                onPressed: presenter.onBookNow,
-                icon: const Icon(Icons.local_car_wash,color: Colors.white,),
-                label: const Text("Book Now",style: TextStyle(color: Colors.white),),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-*/
